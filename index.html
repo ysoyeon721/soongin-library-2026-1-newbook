@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>2026학년도 1학기 신간도서</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Pretendard 폰트 -->
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    :root {
+      /* 🌼 봄 테마 색상 */
+      --bg: #FEFCF6;
+      --card-bg: #ffffff;
+      --accent: #66BB6A;           
+      --accent-hover: #FFD54F;     
+      --accent-light: #F1F8E9;     
+      --text-main: #4E443A;        
+      --text-muted: #8D7B68;       
+      --border: #e0e0e0;
+    }
+    
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+    }
+    
+    header {
+      background-color: white;
+      padding: 3rem 1rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      margin-bottom: 2.5rem;
+      border-bottom: 6px solid var(--accent-hover);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.4rem;
+      color: #2E7D32;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    .shelf-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .shelf-tab {
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .shelf-tab span.count {
+      font-size: 0.85rem;
+      color: #999;
+      font-weight: 400;
+    }
+    .shelf-tab:hover {
+      border-color: var(--accent-hover);
+      background: var(--accent-hover);
+      color: #333;
+    }
+    .shelf-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 10px rgba(102, 187, 106, 0.3);
+    }
+    .shelf-tab.active span.count {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .kdc-section {
+      margin-bottom: 24px;
+      border-radius: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      overflow: hidden;
+    }
+    .kdc-header {
+      padding: 14px 18px;
+      background: var(--accent-light);
+      border-bottom: 1px solid #dcedc8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .kdc-header:hover {
+      background: #e8f5e9;
+    }
+    .kdc-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: #2E7D32;
+      font-size: 1.15rem;
+    }
+    .kdc-toggle {
+      font-size: 0.9rem;
+      color: var(--accent);
+      width: 16px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+    .kdc-count {
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    /* === 📌 완벽 구현된 책 카드 그리드 === */
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 24px;
+      padding: 24px 20px;
+    }
+    
+    .book-card {
+      background: #fff;
+      border-radius: 12px; /* 둥근 모서리 */
+      border: 1px solid #e0e0e0; /* 연한 테두리 */
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03); /* 은은한 그림자 */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* ★ 핵심: 사진이 카드 모서리 밖으로 삐져나가지 않게 자름 */
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .book-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      border-color: #ccc;
+    }
+    
+    /* 📌 표지 영역 (여백 완전 제거!) */
+    .book-cover-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 145%; /* 책 표지 비율에 맞게 높이 확보 */
+      background: #fafafa;
+      display: block;
+      overflow: hidden; /* ★ 핵심: 확대 시 사진이 틀 밖으로 안 나가게 막음 */
+      border-bottom: 1px solid #f0f0f0; /* 사진과 텍스트 사이 구분선 */
+    }
+    
+    .book-cover-wrapper img {
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      object-fit: cover; /* ★ 핵심: 상하좌우 빈틈없이 꽉 채우기 */
+      transition: transform 0.3s ease; /* 부드러운 확대 애니메이션 */
+    }
+    .book-card:hover .book-cover-wrapper img {
+      transform: scale(1.06); /* 마우스 올리면 사진만 스르륵 확대됨 */
+    }
+    
+    /* 텍스트 영역 */
+    .book-info {
+      padding: 16px 14px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1; 
+      justify-content: flex-start;
+    }
+    
+    .book-title {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #333;
+      margin-bottom: 8px;
+      line-height: 1.35;
+      word-break: keep-all; /* 긴 제목 여러 줄로 예쁘게 표시 */
+    }
+    
+    .book-author {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 12px;
+      line-height: 1.3;
+      word-break: keep-all; 
+    }
+    
+    .book-kdc {
+      font-size: 0.85rem;
+      color: #b0b0b0;
+      margin-top: auto; /* KDC를 항상 맨 아래로 정렬 */
+    }
+    
+    @media (max-width: 600px) {
+      .book-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; padding: 16px; }
+      header h1 { font-size: 1.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🌼 2026학년도 1학기 신간도서</h1>
+  </header>
+  
+  <main>
+    <div class="shelf-tabs" id="shelfTabs"></div>
+    <div id="kdcContainer"></div>
+  </main>
+
+<script>
+// =========================================================
+// 👇 데이터를 아래에 계속 추가하세요.
+// =========================================================
+const rawData = `
+[교사용]총류 000|세상은 이야기로 만들어졌다|자미라 엘 우아실.프리데만 카릭 지음, 김현정 옮김|9791192953151|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192953151.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192953151&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]총류 000|진짜 쓰는 실무 엑셀|오빠두(전진권) 지음|9791191600704|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191600704.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191600704&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]철학 100|인간의 조건|한나 아렌트 지음, 이진우 옮김|9788935664825|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788935664825.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788935664825&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]철학 100|도둑맞은 집중력|요한 하리 지음, 김하현 옮김|9791167740984|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167740984.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167740984&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]철학 100|몰입의 즐거움|미하이 칙센트미하이 지음, 이희재 옮김|9788973378869|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788973378869.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788973378869&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]철학 100|정신과 의사 정우열의 감정수업|정우열 지음|9791130663388|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130663388.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130663388&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]철학 100|빈 서판 : 인간은 본성을 타고나는가|스티븐 핀커 지음, 김한영 옮김|9788983711458|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788983711458.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788983711458&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]철학 100|오프 먼트(OFF-MENT)|장재열 지음|9791194979715|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194979715.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194979715&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]사회과학 300|박곰희 연금 부자 수업|박곰희 지음|9791168342941|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168342941.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168342941&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]사회과학 300|교과별 수업활동 100|김성규, 정일신 지음|9788969152008|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788969152008.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788969152008&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]사회과학 300|놀이를 적용한 초등 영어 수업|김영미 지음|9788962872279|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962872279.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962872279&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]사회과학 300|한 방에 끝내는 놀이체육수업 40분|김양수 지음|9788994655819|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788994655819.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788994655819&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]자연과학 400|AI가 쉬워지는 최소한의 수학|이동준|9791193301074|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193301074.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193301074&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]기술과학 500|남의 집 정원 구경|박희영 지음|9791194374718|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194374718.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194374718&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]기술과학 500|아이의 친구 관계|김붕년 지음|9791168274297|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168274297.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168274297&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|레볼루셔너리 로드|리처드 예이츠 지음, 이삼출 옮김|9788937464768|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788937464768.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788937464768&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|멜라닌|하승민 지음|9791172130879|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791172130879.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791172130879&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|일억 번째 여름 (양장)|청예 지음|9788936431556|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936431556.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936431556&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|절창|구병모 지음|9791141602451|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141602451.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141602451&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|할매|황석영 지음|9788936439880|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936439880.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936439880&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|허밍|최정원 지음|9788936431525|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936431525.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936431525&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|공감에 관하여 : 이금희 소통 에세이|이금희 지음|9791130672779|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130672779.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130672779&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|어른의 행복은 조용하다|태수 지음|9791169851053|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791169851053.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791169851053&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|괴테는 모든 것을 말했다|스즈키 유이 지음, 이지수 옮김|9791194530701|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194530701.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194530701&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|나미야 잡화점의 기적 (무선)|히가시노 게이고 지음, 양윤옥 옮김|9791167901484|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167901484.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167901484&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|박사가 사랑한 수식|오가와 요코 지음, 김난주 옮김|9788972757085|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788972757085.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788972757085&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|사탄탱고|크러스너호르커이 라슬로 지음, 조원규 옮김|9791159921445|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159921445.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159921445&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|가장 파란 눈|토니 모리슨 지음, 정소영 옮김|9791141600167|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141600167.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141600167&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|돌로레스 클레이본|스티븐 킹 지음, 김승욱 옮김|9791170526599|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791170526599.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791170526599&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|레슨|이언 매큐언 지음, 민승남 옮김|9791141610883|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141610883.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141610883&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|시녀 이야기 (리커버 일반판, 무선)|마거릿 애트우드 지음, 김선형 옮김|9791158883843|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158883843.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158883843&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|아르테미스|앤디 위어 지음, 남명성 옮김|9788925588711|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788925588711.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788925588711&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|증언들|마거릿 애트우드 지음, 김선형 옮김|9791158886134|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158886134.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158886134&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|햄닛|매기 오패럴 지음, 홍한별 옮김|9788954699860|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788954699860.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788954699860&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|혐오의 즐거움에 관하여|윌리엄 해즐릿 지음, 공진호 옮김|9791186643204|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791186643204.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791186643204&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]문학 800|오디세이아 (고대 그리스어 완역본)|호메로스 지음, 페테르 파울 루벤스 외 그림, 박문재 옮김|9791139721973|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791139721973.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791139721973&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]역사 900|역사는 어떻게 진보하고 왜 퇴보하는가 : 1600년부터 오늘까지, 진보와 반동의 세계사|파리드 자카리아 지음, 김종수 옮김|9791193528860|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193528860.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193528860&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]역사 900|서경석의 한국사 한 권|서경석 지음, 염명훈 감수|9791165703523|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165703523.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165703523&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]역사 900|팔레스타인 100년 전쟁 : 정착민 식민주의와 저항의 역사, 1917-2017|라시드 할리디 지음, 유강은 옮김|9788932921488|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788932921488.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788932921488&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[교사용]역사 900|귀족 시대|임승휘 지음|9791142302084|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791142302084.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791142302084&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|지구 생명을 살리는 산소|김형진 지음, 임광희 그림|9791199289932|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791199289932.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791199289932&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|완다는 별의 소리를 들어요 : 소리로 우주를 연구하는 시각 장애인 천문학자 이야기|완다 디아스 메르세드, 에이미 S. 핸슨 지음, 로시오 아레올라 멘도사 그림, 지구 옮김|9791192894836|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192894836.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192894836&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|지구가 평평하다면?|안드레아 안티노리 지음, 문주선 옮김|9791198912169|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198912169.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198912169&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|내일도 그럴 거야|나현정 지음|9788955828313|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955828313.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955828313&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|사랑이 어때서?|김희현 지음|9788955828337|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955828337.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955828337&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]총류 000|도서관에 간 외계인|최향숙,박미숙 지음, 김중석 그림|9788956187549|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788956187549.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788956187549&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]철학 100|아무것도 없는 박물관|스티븐 과르나차 지음, 문주선 옮김, 김난령 해설|9791189044800|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189044800.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189044800&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]철학 100|늑대가 되고 싶은 날|에우헤니아 페레야 지음, 산티아고 게바라 그림, 나도우 옮김|9791189044879|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189044879.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189044879&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|난 터프해!|에린 프랭클 지음, 파울라 히피 그림|9788962743708|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962743708.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962743708&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|내가 어떻게!|에린 프랭클 지음, 파울라 히피 그림|9788962743692|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962743692.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962743692&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|내가 이상해?|에린 프랭클 지음, 파울라 히피 그림|9788962743685|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962743685.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962743685&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|만약에 내가|장덕현 지음, 윤미숙 그림|9791161725697|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791161725697.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791161725697&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|모두 모두 안녕!|윤여림 글, 배현주 그림|9788901158433|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788901158433.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788901158433&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|공간을 잘 기억해요 : 난독증|트레이시 패키암 앨로웨이 지음, 아나 산펠리포 그림, 문송이 옮김|9791192148946|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192148946.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192148946&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|생각이 반짝반짝해요 : ADHD|트레이시 패키암 앨로웨이 글 ;아나 산펠리포 그림 ;문송이 옮김|9791192148922|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192148922.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192148922&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|좋아하면 박사가 돼요 : 자폐 스펙트럼|트레이시 패키암 앨로웨이 지음, 아나 산펠리포 그림, 문송이 옮김|9791192148939|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192148939.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192148939&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|친구의 기분을 잘 알아요 : 불안장애|트레이시 패키암 앨로웨이 지음, 아나 산펠리포 그림, 문송이 옮김|9791192148953|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192148953.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192148953&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]사회과학 300|호랑이 형님|우현옥 글, 이미리 그림|9791186979402|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791186979402.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791186979402&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|더 가까이 더 멀리 : 현미경과 망원경 이야기|메리 올드 지음, 아드리아 메서브 그림, 이계순 옮김|9791199200326|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791199200326.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791199200326&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|조금만 기다려 : 기다림 끝에 만나게 되는 경이로운 자연의 이야기|레이첼 윌리엄스 지음, 리어니 로드 그림, 이원경 옮김|9791159292521|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159292521.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159292521&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|알고 보면 더 잘보이는 단위도감|나인완 지음|9791192340531|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192340531.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192340531&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]자연과학 400|이런, 멋쟁이들!|김유대|9791192102337|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192102337.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192102337&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]기술과학 500|미세미세한 맛 플라수프|김지형 지음, 조은수 글, 안윤주 감수|9791197303449|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791197303449.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791197303449&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]기술과학 500|지구를 구하는 예술 놀이 : 예술가에게서 배우는 10가지 기후 행동|프란체스코 스팜피나토 글, 이레네 리달디 그림, 주효숙 옮김|9791192894799|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192894799.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192894799&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|너도 맞고, 나도 맞아!|안소민 지음|9788949114002|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949114002.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949114002&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|우리 학교에 이상한 친구가 전학 왔어요|데이비드 매킨토쉬 글.그림, 최지현 옮김|9788937846021|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788937846021.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788937846021&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|나는 나는 1학년|신형건 지음, 강나래 외 그림|9788961708913|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788961708913.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788961708913&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|받침 있는 동동시|박성우 지음, 최미란 그림|9791165703219|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165703219.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165703219&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|가시 소년|권자경 지음, 하완 그림|9791165731335|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165731335.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165731335&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|감귤 기차|김지안 글.그림|9788974999988|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788974999988.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788974999988&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|괜찮아 아저씨|김경희 글.그림|9788949105048|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949105048.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949105048&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|구름 놀이|한태희 글 그림|9788937813801|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788937813801.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788937813801&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|기차 여행|이숙현 지음, 토마쓰리 그림|9788961772921|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788961772921.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788961772921&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|꽁꽁꽁 아이스크림|윤정주 지음|9791158363499|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158363499.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158363499&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|꽃에서 나온 코끼리|황 K 글.그림|9791158360337|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158360337.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158360337&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|나는 개다|백희나 지음|9791198610676|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198610676.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198610676&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|나는 안내견이야|표영민 지음, 조원희 그림|9791191973099|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191973099.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191973099&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|난 네가 부러워|영민 글.그림|9788958073918|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788958073918.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788958073918&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|낭만찐빵|문채빈 지음|9791164137381|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791164137381.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791164137381&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|내 맘대로 편의점|김영진 지음|9791158365578|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158365578.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158365578&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|네 꿈을 응원해, 권투 장갑!|유설화 지음|9791158365226|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158365226.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158365226&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|노을 수프|문채빈 지음|9791164138623|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791164138623.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791164138623&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|눈사람 사탕|박종진 지음, 송선옥 그림|9791170441618|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791170441618.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791170441618&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|대단한 참외씨|임수정 지음, 전미화 그림|9791187517900|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187517900.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187517900&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|대답 없는 AI|이수연 지음, 김소라 그림|9791164632930|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791164632930.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791164632930&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|도서관 고양이|최지혜 지음, 김소라 그림|9791163930334|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163930334.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163930334&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|도서관의 악몽|자현 지음, 차영경 그림|9791198860583|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198860583.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198860583&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|도시 해킹|한수연 지음|9788962194685|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962194685.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962194685&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|마음 그릇|전보라 지음|9791199524361|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791199524361.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791199524361&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|맛있는 건 맛있어|김양미 지음, 김효은 그림|9788952789884|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788952789884.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788952789884&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|먹어도 먹어도 줄지 않는 죽|최숙희 지음|9791158361402|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158361402.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158361402&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|배고픈 늑대가 사냥하는 방법|밤코 지음|9791168414419|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168414419.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168414419&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|브로콜리지만 사랑받고 싶어|별다름.달다름 지음, 서영 그림|9791157855506|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791157855506.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791157855506&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|빨간 사과가 먹고 싶다면|진주 지음, 가희 사진|9791198156587|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198156587.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198156587&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|세상에서 가장 힘이 센 말|이현정 지음, 이철민 그림, 김성미 꾸밈|9791196981600|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791196981600.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791196981600&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|아빠, 잠이 도망갔어!|임수정 지음, 김슬기 그림|9791163931188|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163931188.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163931188&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|알밤 소풍|김지안 글.그림|9788974990466|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788974990466.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788974990466&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|야구장 가는 날|김영진 지음|9788955825459|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955825459.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955825459&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|어느 날 똑똑|박지희 지음|9791165884062|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165884062.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165884062&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|어린이가 되고 말았어|강혜숙 지음|9791173324260|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173324260.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173324260&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|우리 동네 청수마트|이작은 지음|9791192102375|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192102375.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192102375&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|인사|김성미 지음|9791158361655|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158361655.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158361655&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|진짜 일 학년 책가방을 지켜라!|신순재 지음, 안은진 그림|9791187287254|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187287254.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187287254&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|집에서 나가지 않는 돌멩이|우지현 지음|9791167553393|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167553393.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167553393&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|치코|김순현 지음|9788949102672|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949102672.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949102672&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|친구 자판기|조경희 지음|9791159955167|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159955167.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159955167&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|친구를 만드는 커다란 귀|허은미 지음, 소복이 그림|9791194148500|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194148500.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194148500&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|코끼리가 꼈어요|박준희 지음, 한담희 그림|9791187439578|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187439578.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187439578&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|틀리면 어떡해?|김영진 글.그림|9788955824896|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955824896.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955824896&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|팥빙수의 전설 (리커버)|이지은 글.그림|9788901232232|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788901232232.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788901232232&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|프랑켄 수선집|윤담요 지음|9788943315788|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788943315788.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788943315788&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|화내지 말고 예쁘게 말해요|안미연 지음, 서희정 그림|9791190253253|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190253253.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190253253&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|그랬구나!|치웨이 지음, 조은 옮김|9791198256706|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198256706.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198256706&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|머무는 마음, 떠나는 마음|티아 루 지음, 공민희 옮김|9788965137917|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965137917.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965137917&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|고 녀석 맛있겠다|미야니시 타츠야 글 그림, 백승인 옮김|9788990364661|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788990364661.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788990364661&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|나는 정말 어디에 있는 걸까|요시타케 신스케 지음, 권남희 옮김|9788934940821|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788934940821.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788934940821&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|안녕하세요 땃쥐입니다|미야코시 아키코 지음, 박선형 옮김|9791141608200|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141608200.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141608200&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|어쩌다 좋은 일이 생길지도|요시타케 신스케 지음, 고향옥 옮김|9791173321771|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173321771.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173321771&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|위기 탈출 도감|스즈키 노리타케 지음, 권남희 옮김|9791187113669|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187113669.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187113669&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|위기 탈출 도감 2|스즈키 노리타케 지음, 권남희 옮김|9791187113737|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187113737.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187113737&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|위기 탈출 도감 3|스즈키 노리타케 지음, 권남희 옮김|9791187113805|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187113805.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187113805&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|이게 정말 나일까?|요시타케 신스케 글.그림, 김소연 옮김|9788934971634|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788934971634.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788934971634&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|이게 정말 사과일까?|요시타케 신스케 글.그림, 고향옥 옮김|9788934968726|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788934968726.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788934968726&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|기회를 주세요 : 울적하고 속상한 날|알프 괴칼프 지음, 알렉산드라 파비아 그림, 김배경 옮김, 소이언 해설|9791163271505|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163271505.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163271505&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|개인 정보 유출 사건|사스키아 훌라 지음, 이나 헤텐하우어 그림, 김현희 옮김|9791163271826|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163271826.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163271826&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|기억나요?|시드니 스미스 지음, 김지은 옮김|9791158364601|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158364601.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158364601&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|다니엘의 멋진 날|미카 아처 지음, 이상희 옮김|9788949113913|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949113913.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949113913&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|빨간 벽|브리타 테켄트럽 지음, 김서정 옮김|9791188909094|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188909094.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188909094&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|우리 집 식탁이 사라졌어요!|피터 H. 레이놀즈 지음, 류재향 옮김|9791167550538|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167550538.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167550538&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|탁탁 톡톡 음매~ 젖소가 편지를 쓴대요|도린 크로닌 지음, 베시 루윈 그림, 이상희 옮김|9788925578217|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788925578217.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788925578217&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|할머니의 뜰에서|조던 스콧 지음, 시드니 스미스 그림, 김지은 옮김|9791158364007|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158364007.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158364007&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|그랬다면 어땠을까|올리비에 탈레크 지음, 이나무 옮김|9791191131338|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191131338.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191131338&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|색깔 전쟁|시모 아바디아 지음, 김지애 옮김|9791165815455|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165815455.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165815455&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|책 읽어 주는 기계|잉그리드 샤베르 지음, 라울 구리디 그림, 김보희 옮김|9791190393256|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190393256.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190393256&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|눈이 바쁜 아이|안드레 카힐류 지음, 이현아 옮김|9791190931533|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190931533.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190931533&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|선택을 심어요|가오이러 지음, 황석희 옮김|9791166463532|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791166463532.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791166463532&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[그림책]문학 800|집 안에 무슨 일이?|카테리나 고렐리크 지음, 김여진 옮김|9791190931403|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190931403.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190931403&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|NATURE 처음 만나는 자연 생명 도감|헬렌 브라운 지음, 클레어 스컬리 그림, 한성희 옮김|9788955885095|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955885095.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955885095&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|와! 맹꽁이다|문광연 지음|9788978895705|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788978895705.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788978895705&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|새의 이름 - 내 마음에 깃든 37마리 새를 읽는 시간|에마뉘엘 케시르-르프티 지음, 레아 모프티 그림, 권지현 옮김|9791193878293|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193878293.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193878293&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|권진규 : 흙을 구운 조각가|조은정 지음|9788989004141|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004141.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004141&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|김기창 : 장애를 딛고 선 천재화가|심경자 지음|9788989004073|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004073.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004073&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|김정희 : 난초를 닮은 서화가|안성희 지음|9788989004028|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004028.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004028&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|김종영 : 생각을 새긴 조각가|조은정 지음|9788989004349|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004349.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004349&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|김환기 : 꿈을 그린 추상화가|임창섭 지음|9788989004066|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004066.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004066&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|백남준 : 새로운 세계를 연 비디오 예술가|김홍희 지음|9788989004059|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004059.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004059&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|오지호 : 빛과 색채의 화가|문순태 지음|9788989004325|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004325.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004325&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|장욱진 : 새처럼 날고 싶은 화가|김형국 지음|9788989004110|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788989004110.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788989004110&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|시랑 먼저 놀 거야!|강승숙 지음|9791155250174|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791155250174.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791155250174&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|암행어사 박아지 1|천효정 지음, 호산 그림|9788949143019|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949143019.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949143019&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|암행어사 박아지 2|천효정 지음, 호산 그림|9788949143026|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949143026.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949143026&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|암행어사 박아지 3|천효정 지음, 호산 그림|9788949143033|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949143033.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949143033&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|암행어사 박아지 4|천효정 지음, 호산 그림|9788949143040|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949143040.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949143040&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|쥐들 G들|강담마 지음, 김수빈 그림|9788965467427|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965467427.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965467427&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|역사 쌤과 함께하는 한국사 도장 깨기 1 - 서울(전근대|허두영 지음,김학수 그림|9791194028451|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194028451.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194028451&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|역사 쌤과 함께하는 한국사 도장 깨기 2 - 서울(근현대|송치중 지음,김학수 그림|9791194028468|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194028468.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194028468&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|역사 쌤과 함께하는 한국사 도장 깨기 3 - 경주|조정은 지음,신동민 그림|9791194028581|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194028581.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194028581&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|역사 쌤과 함께하는 한국사 도장 깨기 4 - 경기|이은홍 지음, 이창우 그림|9791194028666|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194028666.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194028666&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|who? 근현대사 이회영|유경원 지음, 팀키즈 그림, 황현필 추천|9791130673363|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130673363.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130673363&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|우리는 자료 조사에 진심|바운드|9791156132233|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156132233.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156132233&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|1일 1단어 1분으로 끝내는 IT공부|류한석 지음|9791191309454|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191309454.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191309454&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|개코원숭이 뼈에서 스마트폰까지 컴퓨터의 역사|레이첼 이그노토프스키 지음, 배장열 옮김, 정지훈 감수|9788964965207|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788964965207.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788964965207&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|블렌더로 쉽게 배우는 3D 모델링|김민정 지음|9791165711726|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165711726.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165711726&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|송쌤의 엔트리 인공지능 학교|송상수 지음|9791191600926|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191600926.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191600926&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|슬기로운 인공지능 AI 활용법|금준경 지음, 나인완 그림|9791165703387|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165703387.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165703387&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|인공지능 세상에서 주인공 되기|성재복 옮김, 오카지마 유시 감수|9791192151670|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192151670.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192151670&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|초등 AI 백과 : AI 시대의 초등 필수 교양|스즈키 히데키 감수, 김성훈 옮김|9791168225282|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168225282.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168225282&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|초등학생을 위한 AI 미래 지식 74|김영현 지음, 최정을 그림|9791174671035|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791174671035.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791174671035&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|한눈에 보이는 인공지능 그림책|한선관이정원.장명현 지음|9788931556926|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788931556926.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788931556926&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|AI를 공부하기 위하여 어떻게 해야 되겠는가|이태욱 외 지음|9788909550840|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788909550840.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788909550840&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|손쉬운 로블록스 게임 코딩|잰더 브룸보 지음, 조경빈 옮김|9791161755601|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791161755601.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791161755601&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|초등학생을 위한 디지털 드로잉 무작정 따라하기|권동균.김수민 지음|9791140707225|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791140707225.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791140707225&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|초등학생을 위한 박학다식 이야기 [4] : 경제|김선 지음|9791193300411|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193300411.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193300411&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|초등학생을 위한 박학다식 이야기 [5] : 예술 |좋은생각 편집부 지음, 류재만 이동희 감수|9791193300619|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193300619.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193300619&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|가짜 뉴스와 진짜 뉴스를 구별할 수 있어?|조이스 그랜트 지음, 캐슬린 마르코트 그림, 한성희 옮김|9791171470327|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171470327.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171470327&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|뉴스의 탄생|제인 말로우 지음, 테리 포 그림, 이수연.김양원 옮김|9791187304531|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791187304531.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791187304531&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 10 : 통신과 스마트폰|최재붕 지음, 박우희 그림|9791173571503|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173571503.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173571503&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 3 : 화폐와 경제|장세현 지음, 차차 그림, 홍기훈 감수, 김대식 기획|9788950910907|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788950910907.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788950910907&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 5 : 문자와 생활|유현주 지음, 남동완 그림, 김대식 기획|9791171170142|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171170142.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171170142&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 6 : 진화와 유전|이은희 지음, 나인완 그림, 김대식 기획|9791171171651|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171171651.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171171651&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 7 : 인공 지능과 미래|김형자 지음, 이창우 그림, 김대식 기획|9791171173433|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171173433.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171173433&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 8 : 스포츠와 올림픽|장지원 지음, 이창우 그림, 김대식 기획|9791171176724|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171176724.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171176724&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]총류 000|생각의 탄생 9 : 에너지와 환경|김형자 지음, 박우희 그림, 김대식 기획|9791171177950|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171177950.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171177950&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]철학 100|내 마음이 왜 이럴까?|나이토 요시히토 지음, 신병근 그림, 한선주 옮김|9788947501842|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788947501842.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788947501842&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]철학 100|마음의 주인은 언제나 나야 : 어린이를 위한 초등 심리학 교실|손원우 지음, 김서희 그림|9791169851893|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791169851893.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791169851893&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]철학 100|어린이 시간 관리 연습|한투 지음, 김희정 옮김|9791168273153|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168273153.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168273153&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]철학 100|어린이를 위한 철학자의 말|김종원 지음|9791198889553|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198889553.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198889553&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]철학 100|우리 학교에 마음 구조대가 떴다!|박영주·변지선|9791194755968|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194755968.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194755968&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]철학 100|이유 없이 싫은 이유|박부금 지음, 전지은 그림|9791193255414|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193255414.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193255414&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|달력으로 배우는 초등 필수 경제 교실|이성강 지음, 배누 그림|9791192869391|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192869391.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192869391&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|세금 내는 아이들의 생생 경제 교실 1|최재훈 지음, 안병현 그림, 옥효진 감수|9791197853852|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791197853852.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791197853852&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|세금 내는 아이들의 생생 경제 교실 2|최재훈 지음, 안병현 그림, 옥효진 감수|9791192504223|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192504223.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192504223&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|세금 내는 아이들의 생생 경제 교실 3|최재훈 지음, 안병현 그림, 옥효진 감수|9791192504490|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192504490.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192504490&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|이 일로 돈을 벌었다고요? : 우리나라 산업은 어떻게 발달했을까?|이정환.김은정 지음, 이장미 그림|9791194494171|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194494171.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194494171&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|주식회사 6학년 2반|석혜원 지음, 한상언 그림|9788974784300|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788974784300.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788974784300&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|그래서 이런 직업이 생겼대요|우리누리 지음, 송진욱 그림|9791199302310|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791199302310.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791199302310&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|최고의 배우가 되는 방법|해나 뉴 지음, 솔 리네로 그림, 박정화 옮김|9791188064564|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188064564.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188064564&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|최고의 수의사가 되는 방법|제스 프렌치 지음, 솔 리네로 그림, 박정화 옮김|9791188064502|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188064502.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188064502&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|최고의 의사가 되는 방법|푸남 크리샨 지음, 솔 리네로 그림, 박정화 옮김|9791188064519|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188064519.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188064519&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|최고의 축구 선수가 되는 방법|레이첼 얀키 지음, 솔 리네로 그림, 박정화 옮김|9791188064496|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188064496.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188064496&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|꼬리에 꼬리를 무는 광고 이야기|정상수 지음|9791168103252|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168103252.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168103252&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|교통으로 세상을 바꿀 수 있다고요?|김주현 지음, 안주영 그림, 강갑생 감수|9791170267386|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791170267386.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791170267386&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|하늘·땅·바다 어디서나 조심조심! 어린이를 위한 교통안전|김은중 지음, 김창희 그림|9791163633440|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163633440.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163633440&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|나는 왜 쇼츠를 멈추지 못할까|김아미 지음|9788936453329|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936453329.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936453329&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|선생님, 세계 시민이 되려면 어떻게 해야 해요?|정주진 지음, 홍윤표 그림|9791188215683|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188215683.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188215683&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|열 살에 시작하는 데일 카네기 인간관계론|박소윤이주희 지음, 차상미 그림, 데일 카네기 원작|9791139725445|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791139725445.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791139725445&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|외계인 탐사대의 지구인 보고서|에바 솔라슈 지음, 로베르트 챠이카 그림, 이지원 옮김|9791192953625|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192953625.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192953625&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|초등 디지털 미디어 리터러시|김지훈 지음, 홍지혜 그림|9791192308333|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192308333.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192308333&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|10대를 위한 공정하다는 착각|신현주 글, 함규진 감수, 마이클 샌델 원작|9791168412040|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168412040.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168412040&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|동물에게도 권리가 필요하다고요?|전채은 지음, 한호진 그림|9791167742360|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742360.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742360&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|똑똑한 내가 위험하다고?|연유진 지음, 방상호 그림|9791161729695|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791161729695.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791161729695&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|무심코 했는데 혐오와 차별이라고요?|김청연 지음, 김이주 그림|9791167742223|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742223.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742223&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|미디어, 모두가 진실은 아니라고요?|임수경 지음, 김소희 그림|9791167742773|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742773.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742773&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|선거, 누구에게 투표해야 할까요?|채봉윤(봉봉샘) 지음, 이승연 그림|9791167742629|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742629.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742629&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|안 때렸는데 폭력이라고요?|임수경 지음, 이주미 그림|9791167742162|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742162.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742162&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|어린이도 경제 활동을 한다고요?|천상희 지음, 어수현 그림|9791167742681|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742681.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742681&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|장애를 왜 이해해야 할까요?|백정연 지음, 김민우 그림|9791167742476|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742476.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742476&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|NGO로 배우는 더불어 살기|박동석 지음, 김진미 그림|9791193150566|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193150566.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193150566&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|안녕, 미래의 국회의원!|이사벨 미뉴스 마르틴스 지음, 카롤리나 셀라스 그림, 김여진 옮김, 하승우 감수|9791193912119|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193912119.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193912119&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|언제나 봄!|히타 타보르다 두아르트 지음, 마달레나 마토주 그림, 안녕로빈 옮김|9791124232002|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791124232002.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791124232002&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|국회의 모든 것 : 민주주의의 심장|기획집단 MOIM 지음, 박상훈 그림|9791189231682|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189231682.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189231682&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|10대를 위한 나를 지키는 법 이야기|서민 지음, 김지하 그림|9791194356790|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194356790.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194356790&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|그래서 이런 법이 생겼대요|우리누리 지음, 신동민 그림, 서창효서치원 감수|9791164069309|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791164069309.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791164069309&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|누구의 잘못일까? . 1 : 인간 VS 동물|곽영미 글, 윤소진 그림|9791175486355|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791175486355.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791175486355&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|사소하지만 그것도 범죄야|정지우 지음, 신병근 그림|9791194636601|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194636601.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194636601&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|생태 전환 교육|그림책사랑교사모임 지음|9788969151452|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788969151452.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788969151452&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|여덟 살의 시간 관리|이서윤 지음, 장선환 그림|9791161726557|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791161726557.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791161726557&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]사회과학 300|쾅쾅쾅 전쟁 속에 숨은 갈등|서민 지음, 유남영 그림|9791189366438|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189366438.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189366438&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|이게 뭐예요?|라파엘 마르탱 지음, 클레르 슈바르츠 그림, 강현주 옮김|9791160340990|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791160340990.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791160340990&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|지구가 너무도 사나운 날에는 : 위기의 지구를 위한 특별한 과학 수업|가치를꿈꾸는과학교사모임 지음|9791190337588|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190337588.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190337588&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|다있소 과학 1 : 최고의 문구왕을 뽑아라|윤자영 지음, 노이신 그림|9791156337560|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156337560.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156337560&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|What on Earth! 호기심 백과 : 우리 몸과 동물의 비밀|샐리 사임스.사라네 테일러 지음, 케이트 슬레이터 그림|9791166463327|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791166463327.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791166463327&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|What on Earth! 호기심 백과 : 위대한 발명과 우리 별|샐리 사임스.사라네 테일러 지음, 케이트 슬레이터 그림|9791166463334|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791166463334.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791166463334&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|무브무브 개념 수학 : 단위와 측정|션 맥아들 지음, 몰리 라틴 그림, 이현아 옮김|9788943317980|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788943317980.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788943317980&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|무브무브 개념 수학 : 연산 분수 도형|DK 개념 수학 편집위원회 지음, 이현아 옮김|9788943317973|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788943317973.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788943317973&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 1 : 바닥에 떨어진 사탕, 먹어도 될까?|남호영 지음, 임다와 그림, 와이즈만 영재교육연구소 감수|9791190744805|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190744805.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190744805&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 10 : 거인 밥그릇이 운동장만 하다고?|이광연 외 지음, 젠틀멜로우 그림, 와이즈만 영재교육연구소 감수|9791199417809|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791199417809.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791199417809&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 2 : 하루에 거짓말 몇 번이나 하니?|남호영 지음, 정민영 그림, 와이즈만 영재교육연구소 감수|9791190744812|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190744812.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190744812&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 3 :어디가 제일 간지럽게?|남호영 지음, 미늉킴 그림, 와이즈만 영재교육연구소 감수|9791190744829|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190744829.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190744829&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 4 :펭귄은 똥을 발사한다고?|남호영 지음, 신동민 그림, 와이즈만 영재교육연구소 감수|9791190744836|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190744836.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190744836&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 5 : 왼팔이 가려운데 오른팔을 긁어?|남호영 지음, 김종채 그림, 와이즈만 영재교육연구소 감수|9791192936147|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192936147.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192936147&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 6 : 이 세상은 어쩌면 네모?|이광연최향숙 지음, 김성연 그림, 와이즈만 영재교육연구소 감수|9791192936444|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192936444.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192936444&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 7 : 나폴레옹이 수학 천재라고?|이광연 외 지음, 마현주 그림, 와이즈만 영재교육연구소 감수|9791192936499|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192936499.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192936499&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 8 : 확률이 우리 동네 해결사라고?|이광연 외 지음, 김종채 그림, 와이즈만 영재교육연구소 감수|9791192936581|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192936581.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192936581&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|황당하지만 수학입니다 9 : 스파게티에 수학이 들어간다고?|이광연최향숙 지음, 정민영 그림, 와이즈만 영재교육연구소 감수|9791192936697|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192936697.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192936697&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|물리박사 김상욱의 수상한 연구실 9 : 에너지|김상욱 지음, 정순규 그림, 김하연 글, 강신철 자문|9791171174836|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171174836.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171174836&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|사춘기는 처음이라|이광렬 지음|9791193941607|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193941607.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193941607&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|세상을 바꾸는 반응|시어도어 그레이 지음, 전창림 옮김, 닉 만 사진|9791156331940|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156331940.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156331940&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|세상을 만드는 분자|시어도어 그레이 지음, 꿈꾸는 과학 옮김, 닉 만 사진, 전창림 감수|9791156330516|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156330516.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156330516&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|세상의 모든 원소 118|시어도어 그레이 지음, 꿈꾸는 과학 옮김|9788984012622|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788984012622.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788984012622&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|국제 우주 정거장 서바이벌 24시|파스칼 프레보 지음, 아르노 부탱 그림, 장석훈 옮김|9791194028697|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194028697.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194028697&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|화산이 궁금해!|클라이브 기포드 지음, 안드레사 마이스너 그림, 이한음 옮김|9791194843146|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194843146.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194843146&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|과학을 알아야 날씨가 보이지|파올로 소토코로나 지음, 일라리아 파치올리 그림, 김현주 옮김, 서울과학교사모임 감수|9791163271772|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163271772.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163271772&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|단번에 개념 잡는 기후변화|신나는 과학을 만드는 사람들 외 지음|9791156334002|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156334002.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156334002&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|바닷속 보물을 찾아라! 심해 탐사와 해양 개발|백은영 지음, 최명미 그림|9791163639695|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163639695.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791163639695&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|으스스 호수 : 용암호부터 독성 호수까지, 25가지 무시무시한 호수 이야기|지오 러더퍼드 지음, 이충호 옮김|9788972971801|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788972971801.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788972971801&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|단번에 개념 잡는 생물과 생태계|신나는 과학을 만드는 사람들 외 지음|9791156335078|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156335078.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156335078&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|생물다양성 쫌 아는 10대|김성호 지음, 도아마 그림|9791161729671|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791161729671.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791161729671&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|어린이 산책 수업 : 가을·겨울|김성호 지음, 안경자 그림|9791167552907|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167552907.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167552907&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|어린이 산책 수업 : 봄·여름|김성호 지음, 안경자 그림|9791167552891|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167552891.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167552891&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|저어새 도도의 마지막 선택 : 갯벌 생태계의 깃대종 저어새 지키기|전현정 지음, 김주경 그림, 권인기 도움글|9791194797166|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194797166.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194797166&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|엄청 작은 생물들이 궁금해! : 현미경 과학|애나 클레이본 지음, 매튜 릴리 그림, 한성희 옮김, 이동주 감수|9791191748987|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191748987.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191748987&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|엄청 작은 생물들이 궁금해! : 현미경 과학 2|애나 클레이본 지음, 매튜 릴리 그림, 한성희 옮김, 이동주 감수|9791194843221|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194843221.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194843221&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|선생님, 유전자를 조작해도 되나요?|이상수 지음, 이창우 그림|9791171530359|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171530359.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171530359&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|파브르 식물 이야기|장 앙리 파브르 지음, 추둘란 옮김, 이제호 그림|9788958285212|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788958285212.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788958285212&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|파브르 식물 이야기 1|장 앙리 파브르 지음, 추둘란 엮음, 이제호 그림|9791169814263|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791169814263.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791169814263&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|파브르 식물 이야기 2|장 앙리 파브르 지음, 추둘란 엮음, 이제호 그림|9791169814270|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791169814270.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791169814270&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|동물들의 기나긴 여행|마이크 언윈 지음, 제니 데스몬드 그림, 안성호 옮김|9788943312992|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788943312992.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788943312992&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|야생동물 생태통로 : 전 세계 야생동물들의 이동권 보호 이야기|캐서린 바 지음, 크리스티안 엥겔 그림, 유윤한 옮김|9791191942408|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191942408.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191942408&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|축제에서 찾은 동물권 이야기|서민 지음, 박선하 그림|9788960988453|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788960988453.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788960988453&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]자연과학 400|하늘을 날면서 잠을 잔다고?|옥타비오 핀토스마르틴 야누치 지음, 김정하 옮김|9791192759876|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192759876.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192759876&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|재미있는 발명 이야기|허정림 지음, 장유정.김지훈 그림, 왕연중 감수|9788957365847|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788957365847.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788957365847&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|넥스트 레벨 1 : 인공지능|조성배최향숙 지음, 젠틀멜로우 그림|9791193494301|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193494301.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193494301&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|넥스트 레벨 2 : 메타버스|원종우최향숙 지음, 젠틀멜로우 그림|9791193494394|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193494394.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193494394&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|넥스트 레벨 4 : 자율주행|서승우최향숙 지음, 젠틀멜로우 그림|9791193494493|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193494493.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193494493&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|넥스트 레벨 5 : 로봇|한재권최향숙 지음, 젠틀멜로우 그림|9791193494554|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193494554.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193494554&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|넥스트 레벨 9 : 뇌과학|홍석준최향숙 지음, 젠틀멜로우 그림|9791194439172|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194439172.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194439172&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|머리에서 발끝까지 우리 몸의 구조 : 해부학|박승준 지음, 나수은 그림|9791192595955|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192595955.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192595955&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|복제인간은 가능할까? : 생명공학|박승준 지음, 이한울 그림|9791192595382|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192595382.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192595382&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|뼈가 없으면 우리 몸은 어떻게 될까? : 골격계|박승준 지음, 박민희 그림|9791194728061|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194728061.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194728061&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|우리 몸을 돌고 도는 피 : 혈액|조영욱 지음, 임윤미 그림|9791192595504|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192595504.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192595504&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|우리는 왜 아픈 걸까? : 질병|박승준 지음, 아몬드초콜릿 그림|9791194728214|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194728214.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194728214&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|우리를 살아 숨 쉬게 하는 호흡 : 호흡계|조영욱 지음, 김현준 그림|9791194728009|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194728009.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194728009&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|페니실린에서 항암제까지 : 약리학|박승준 지음, 카나 그림|9791192595399|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192595399.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192595399&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|휴먼 2.0|패트릭 케인 지음, 새뮤얼 로드리게스 그림, 김선영 옮김, 정재승 감수|9791194028659|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194028659.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194028659&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|똥도 물이라고?|베르타 파라모 지음, 문주선 옮김|9791189044794|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189044794.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189044794&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|빅티처 황농문의 몰입 발전소|황농문마케마케 지음, 김민준 그림|9791193487235|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193487235.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193487235&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|의사 어벤저스 25 : 배변·배뇨 질환, 부끄러움을 이겨 내라!|고희정 지음, 조승연 그림, 류정민 감수|9791168091566|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168091566.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168091566&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|최고의 기생충|이승아 지음, 정봉광 외 감수|9791165884703|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165884703.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165884703&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|신기한 시력 운동|신완균 지음, 한날 그림|9791158731922|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158731922.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158731922&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|베란다 텃밭 가꾸기|문지혜.장윤아 지음|9788962592078|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962592078.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962592078&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|실내 가드닝|스즈키 아사미 지음, 김세원 옮김|9791158951221|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158951221.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158951221&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|닭장 속에는 치킨이 : 먹히기 위해 태어난 동물의 비밀|기획집단 MOIM 글 ;홍지혜 그림|9791189231675|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189231675.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189231675&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|깡충거미는 점프 선수야|제시카 라난|9788961702393|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788961702393.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788961702393&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|별안간 지구를 소환합니다|박효미 지음, 홍선주 그림, 강현우 감수|9791193150719|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193150719.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193150719&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|열두 달 환경 달력|임정은 글, 문종인 그림|9791164067800|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791164067800.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791164067800&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|자연을 돌보는 친환경 생활|젠 칠링스워스 지음, 아멜리아 플라워 그림, 김동은 옮김|9791192769271|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192769271.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192769271&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|지구를 아끼는 10대를 위한 반려해변 이야기|김현정 지음, 이다혜 그림|9791194356615|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194356615.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194356615&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|지구인을 위한 패스트패션 보고서|민마루, 유유|9791190869126|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791190869126.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791190869126&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|고대 도시 : 로마의 도시 설계와 건설|데이비드 매콜리 지음, 윤영 옮김|9791130670638|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670638.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670638&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|공장 : 수차 공장에서 증기 기관 공장까지|데이비드 매콜리 지음, 윤영 옮김|9791130670720|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670720.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670720&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|대성당 : 아름다운 고딕 성당의 건축|데이비드 매콜리 지음, 윤영 옮김|9791130670645|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670645.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670645&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|도시의 지하 세계 : 도시를 지탱하는 땅 밑 세계 탐구|데이비드 매콜리 지음, 윤영 옮김|9791130670744|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670744.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670744&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|마천루 : 엠파이어 스테이트 빌딩의 해체|데이비드 매콜리 지음, 윤영 옮김|9791130670737|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670737.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670737&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|성 : 중세 도시의 방어 시설|데이비드 매콜리 지음, 윤영 옮김|9791130670706|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670706.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670706&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|큰 건축물 : 다리, 터널, 댐, 돔과 초고층 빌딩들|데이비드 매콜리 지음, 윤영 옮김|9791130670751|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670751.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670751&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|피라미드 : 고대 이집트의 불가사의한 무덤|데이비드 매콜리 지음, 윤영 옮김|9791130670621|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130670621.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130670621&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|세상 어디든 나의 집|알바 카르바얄 지음, 로렌소 산지오 그림, 성초림 옮김|9791189534295|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189534295.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189534295&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|어린이를 위한 배와 항해 이야기|김남길 지음, 끌레몽 그림|9788983897589|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788983897589.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788983897589&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|바퀴의 역사가 궁금해!|글터 반딧불 지음, 장경섭 그림|9788931381238|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788931381238.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788931381238&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|단번에 개념 잡는 에너지|신나는 과학을 만드는 사람들 외 지음|9791156335108|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156335108.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156335108&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|바이오가 궁금해?|강건욱 지음|9788988738832|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788988738832.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788988738832&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|처음하는 어린이 손바느질 (스프링)|김리경 지음, 고향희 그림|9788980713592|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788980713592.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788980713592&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]기술과학 500|아이는 무엇으로 자라는가|버지니아 사티어 지음, 강유리 옮김|9791193506202|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193506202.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193506202&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|전통 부채|금복현|9788936900137|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936900137.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936900137&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|똑같은 빨강은 없다|김경서 지음|9788936452322|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936452322.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936452322&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|(그림이 말을 거는) 세계 미술관 사전 : 정말 이렇게 그려졌다고요?|이은화 지음, 정진희 그림|9791168091665|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168091665.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168091665&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|반짝반짝 한국 미술사 그림책|안승희 지음|9791185237657|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791185237657.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791185237657&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|너에게 주고 싶은 세계의 인형|정은주 지음, 박지윤 그림|9791159955396|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159955396.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159955396&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|판다의 절규|타이스 판데르헤이던 지음, 정신재 옮김|9791159953880|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159953880.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159953880&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|우리가 음악이 되는 시간|이상인|9791193798263|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193798263.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193798263&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|초등학생을 위한 클래식 음악 수업|정은주 지음|9791198530974|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198530974.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198530974&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|우리가 몰랐던 우리음악 이야기|박소영 지음|9791189213473|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189213473.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189213473&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]예술 600|10대와 통하는 스포츠 이야기|탁민혁.김윤진 지음|9791188215232|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791188215232.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791188215232&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|받침구조대|곽미영 지음, 지은 그림|9791189499525|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189499525.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189499525&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|수상한 국어 탐정단 1|이향안 지음, 조승연 그림|9791158732141|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158732141.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158732141&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|수상한 국어 탐정단 2|이향안 지음, 조승연 그림|9791158733537|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158733537.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158733537&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|수상한 국어 탐정단 3|이향안 지음, 조승연 그림|9791158732165|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158732165.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158732165&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|수상한 국어 탐정단 4|이향안 지음, 조승연 그림|9791158733551|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158733551.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158733551&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|수상한 국어 탐정단 5|이향안 지음, 조승연 그림|9791158732189|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158732189.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158732189&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|어린이 같은 말 다른 뜻 사전|박세랑 지음|9791192869469|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192869469.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192869469&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|태어나서 처음 보는 낱말 사전|강승임 지음, 김고둥 그림|9791194636557|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194636557.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194636557&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]언어 700|(NEW) 레전드 독일어 회화사전|김보형 지음, 요한나 슈미트 감수|9791156352518|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156352518.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156352518&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|한석준의 어린이를 위한 말하기 교실|한석준 지음, 차상미 그림|9791168343672|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168343672.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168343672&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|개구리와 두꺼비는 친구|아놀드 로벨 글.그림, 엄혜숙 옮김|9788949160016|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949160016.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949160016&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|천하제일 치킨쇼|이희정 지음, 김무연 그림|9788949121994|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949121994.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949121994&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|1센티미터 숲|변은경 지음, 이윤희 그림|9788954696678|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788954696678.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788954696678&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|거인들이 사는 나라|신형건 지음, 김유대 외 그림|9788957984949|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788957984949.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788957984949&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|모든 순간이 별|장세정 지음, 손미현 그림|9791191197358|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191197358.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191197358&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|방귀|김기택 지음, 소윤경 그림|9788949102191|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949102191.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949102191&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|알아서 해가 떴습니다|정연철 지음, 김고은 그림|9791160943481|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791160943481.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791160943481&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|우리 동네 이야기|정두리 지음, 강나래 외 그림|9788957983522|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788957983522.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788957983522&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|이상현 동시선집|이상현 지음|9791130460161|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130460161.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130460161&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|햇빛 세탁소 : 양은정 동시집|양은정 지음, 적성초등학교 어린이들 그림|9791162520406|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791162520406.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791162520406&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|어린이 희곡집 활용서|서울초등교육연구회 지음, 오완 그림|9791159953712|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159953712.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159953712&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|가짜 뉴스의 비극, 간토대학살|함영연 지음, 배중열 그림|9788977468726|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788977468726.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788977468726&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|겁보 만보|김유 글, 최미란 그림|9791185564333|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791185564333.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791185564333&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|곧 재능 교환이 시작됩니다|임근희 지음, 메 그림|9791158363482|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158363482.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158363482&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|구름 위 책방|류근원 지음, 최영란 그림|9791191984262|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791191984262.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791191984262&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|그래, 파도!|임화선 지음, 김진화 그림|9788955828368|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955828368.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955828368&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|나 대신 선택해 줘, 무물봇!|제성은 지음, 김다정 그림|9791193366172|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193366172.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193366172&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|나 혼자 사춘기|오늘 지음, 노인경 그림|9788932041568|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788932041568.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788932041568&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|나쁜 비밀이 생겼어요|서민 지음, 손지희 그림|9791198757463|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198757463.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198757463&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|나의 미래에게|주민선 지음|9788936457426|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936457426.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936457426&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|냥냥 도넛 배달부|이혜령 지음, 홍그림 그림|9791165735647|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165735647.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165735647&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|너랑 정말 안 맞아!|최형미 지음, 김정진 그림|9791193366189|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193366189.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193366189&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|너무 큰 소원을 말하지 않을게 |정희영 지음|9791192370941|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192370941.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192370941&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|드래곤 히어로 3|이재문 지음, 김지인 그림|9791173325144|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173325144.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173325144&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|들꽃처럼 별들처럼|선안나 지음, 이상윤 그림|9791165021399|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165021399.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165021399&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|똥볶이 할멈 8|강효미 지음, 김무연 그림|9791198948793|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198948793.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198948793&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|루미너스 오늘부터 데뷔합니다 5|김영주 지음, 하티 그림|9791130675787|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130675787.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130675787&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|리보와 앤|어윤정 지음, 해마 그림|9788954690690|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788954690690.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788954690690&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|리플레이|이윤정 지음, 박재인 그림|9791141615048|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141615048.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141615048&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|마이 가디언 4|이재문 글 ; 무디 그림|9791124035207|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791124035207.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791124035207&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|무지개 목욕탕|강효미 지음, 밤코 그림|9791199368484|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791199368484.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791199368484&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|미션! 황금 카드를 모아라! : 남북한 공통 문화 대탐험|이향안.신연호 지음, 신슬기 그림|9791165790776|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165790776.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165790776&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|벚꽃 수영장|신현경 지음, 노예지 그림|9791168341753|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168341753.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168341753&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|별별 주스 가게|박은아 지음, 김수빈 그림|9791194439486|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194439486.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194439486&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|별일 없는 수요일|곽윤숙 지음, 릴리아 그림|9788946475038|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788946475038.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788946475038&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|비로와 호랑할배|조은주 지음, 장선환 그림|9788932044200|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788932044200.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788932044200&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|빙그레 탐험대 인 서울|정명섭 지음, 불키드 그림|9791170821601|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791170821601.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791170821601&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|빨간 돌을 찾아 줘|최지은 지음, 차야다 그림|9791141615406|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141615406.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141615406&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|상담 교사 추락 사건|정율리 지음, 해마 그림|9791174760395|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791174760395.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791174760395&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|생일엔 마라탕 6 : 함께하면 더 좋은 마라탕|류미정 지음, 손수정 그림|9788965467595|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965467595.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965467595&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|생일엔 마라탕 7 : 두근두근 사랑의 마라탕|류미정 지음, 손수정 그림|9788965467762|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965467762.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965467762&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|세상을 담는 저울|심진규 지음, 한지선 그림|9791165737092|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791165737092.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791165737092&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|숏폼 지옥|신은영 지음, 시은경 그림|9791193947104|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193947104.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193947104&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 영화관|박현숙 지음, 유영주 그림|9788963195773|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788963195773.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788963195773&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|슈퍼 해결사 파인애플 요요|김미희 지음, 이수현 그림|9791192762593|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192762593.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192762593&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|승리의 비밀|주애령 지음|9791162100608|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791162100608.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791162100608&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|시간 여행자의 책|백은석.유혜린 지음, BF. 그림|9791197407079|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791197407079.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791197407079&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|시간을 모으는 생쥐|소중애 지음, 이강훈 그림|9788961555753|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788961555753.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788961555753&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|신기한 맛 도깨비 식당 10|김용세.김병섭 지음, 센개 그림|9791167391476|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167391476.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167391476&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|심장이 고장 난 게 틀림없어|금수정 지음, 김유대 그림|9791159955648|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791159955648.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791159955648&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|아기 토끼와 채송화 꽃|권정생 지음, 정호선 그림|9788936451349|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936451349.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936451349&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|아빠를 구하라!|송정양 지음, 유난희 그림|9791164132508|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791164132508.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791164132508&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|아홉 살 하다|김다노 지음, 홍그림 그림|9791158366148|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158366148.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158366148&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|아홉살 인생|위기철 지음|9791157412037|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791157412037.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791157412037&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|양배추를 응원해 주세요|온선영 지음, 홍주연 그림|9788936451684|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936451684.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936451684&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|어린 임금의 눈물|이규희 지음, 이정규 그림|9788970577166|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788970577166.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788970577166&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|오싹오싹 초등학교 : 우리 학교에 자꾸자꾸 수상한 녀석들이 나타난다!|주애령 지음, 서수인 그림|9791193074756|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193074756.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193074756&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|오즈의 의류 수거함|유영민 지음|9788954430586|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788954430586.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788954430586&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|옥토끼의 비밀 처방전|서민 지음, 김보라 그림|9791198841780|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791198841780.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791198841780&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|이건 진짜 비밀인데!|강경수 외 지음, 밤코 그림|9788955828184|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788955828184.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788955828184&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|이상한 무인 빵집|서아람 지음, 안병현 그림|9791193939468|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193939468.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193939468&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|이상한 옷장|원옥진 지음, 이주희 그림|9791194439493|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194439493.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194439493&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|작은 횃불|박은경 지음, 가지 그림|9791194828242|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194828242.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194828242&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|잔소리탈출연구소 1|윤선아 지음, 원혜진 그림|9791167742131|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742131.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742131&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|잔소리탈출연구소 2|이기규 지음, 지은 그림|9791167742247|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742247.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742247&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|잔소리탈출연구소 3|윤선아 지음, 김잔디 그림|9791167742551|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791167742551.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791167742551&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|전설의 콩알 사또|차율이 지음, 송효정 그림|9791169814126|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791169814126.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791169814126&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|전학생|김화요 지음, sujan 그림|9791193914984|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193914984.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193914984&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|창밖의 기린|김유경 지음, 홍지혜 그림|9791194770091|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194770091.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194770091&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|캄캄한 밤에 나 홀로|김진원 지음, 조혜원 그림|9791193138878|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193138878.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193138878&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|콩알탄 삼총사 2|하신하 지음, 윤봉선 그림|9788984145511|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788984145511.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788984145511&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|톡 : 소문 말고 진실|황지영 지음, 송효정 그림|9791130673202|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130673202.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130673202&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|트윈|유진서 지음|9791171714803|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791171714803.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791171714803&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|폴란드의 비밀 양육원|장경선 지음|9791156336587|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156336587.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156336587&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|푸른 사자 와니니 9|이현 지음, 오윤화 그림|9788936443504|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936443504.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936443504&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|할머니의 고물 재봉틀|이규희 지음, 나오미양 그림|9788965467274|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965467274.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965467274&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|해든 버거|동지아 지음, 윤정주 그림|9791141615796|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791141615796.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791141615796&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|혼자가 좋은 토끼 하나|신은경 지음, 소보루 그림|9791168343603|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791168343603.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791168343603&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|홍길동전 : 춤추는 소매 바람을 따라 휘날리니|류수열 지음, 이승민 그림|9788996851516|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788996851516.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788996851516&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|휠체어 공주는 없어요?|공진하 지음, 홍선주 그림|9791155251768|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791155251768.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791155251768&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|10대에게 힘이 되어준 한마디|정호승 지음|9791173324307|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173324307.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173324307&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|처음 읽는 삼국지 1|이문열 지음, 한현동 원작, 윤종문 구성|9791173111402|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173111402.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173111402&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|처음 읽는 삼국지 2|이문열 지음, 한현동 원작, 윤종문 구성|9791173113581|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173113581.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173113581&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|처음 읽는 삼국지 3|이문열 지음, 한현동 원작, 윤종문 구성|9791173113598|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791173113598.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791173113598&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|처음엔 사소했던 일|왕수펀 지음, 조윤진 옮김|9788958076827|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788958076827.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788958076827&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|귀명사 골목의 여름|가시와바 사치코 지음, 사타케 미호 그림, 고향옥 옮김|9791169212465|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791169212465.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791169212465&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 보건실 6|소메야 가코 지음, 히쓰기 그림, 김소연 옮김|9791158365943|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791158365943.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791158365943&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 이웃집 시노다 1|도미야스 요코 지음, 오바 켄야 그림, 송지현 옮김|9791130642710|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130642710.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130642710&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 이웃집 시노다 2|도미야스 요코 지음, 오바 켄야 그림, 송지현 옮김|9791130642727|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130642727.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130642727&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 이웃집 시노다 3|도미야스 요코 지음, 오바 켄야 그림, 송지현 옮김|9791130642734|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130642734.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130642734&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 이웃집 시노다 4|도미야스 요코 지음, 오바 켄야 그림, 송지현 옮김|9791130642741|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130642741.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130642741&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|수상한 이웃집 시노다 5|도미야스 요코 지음, 오바 켄야 그림, 송지현 옮김|9791130642758|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130642758.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130642758&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|이상한 과자 가게 전천당 : 행운의 갈림길 3|히로시마 레이코 지음, 쟈쟈 그림, 김정화 옮김|9791174670731|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791174670731.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791174670731&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|뭐든 과장하는 마을|셰르민 야샤르 지음, 메르트 튀겐 그림, 김지율 옮김|9788965138259|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965138259.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965138259&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|50 대 50|S. L. 파월 지음, 홍지연 옮김|9791185871134|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791185871134.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791185871134&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|꼬리별|조 토드 스탠튼 지음, 서남희 옮김|9788974993955|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788974993955.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788974993955&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|끔찍한 샐러드|에런 레이놀즈 지음, 피터 브라운 그림, 홍연미 옮김|9788964965474|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788964965474.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788964965474&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|단어수집가|피터 레이놀즈 지음, 김경연 옮김|9788954651721|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788954651721.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788954651721&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|로봇 소년, 학교에 가다|톰 앵글버거.폴 델린저 지음, 김영란 옮김|9788983948113|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788983948113.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788983948113&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|손도끼|게리 폴슨 지음, 김민석 옮김|9788971967867|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788971967867.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788971967867&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|왜 우리는 편을 가를까?|파루크 돈디 지음,김지율 옮김|9788965138280|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788965138280.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788965138280&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|윔피키드 20|제프 키니 글·그림 ; 신인수 옮김|9791175482692|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791175482692.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791175482692&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|프란시스코의 나비 (양장 특별판)|프란시스코 히메네스 지음, 하정임 옮김|9791156336617|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791156336617.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791156336617&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|울프|사샤 스타니시치 지음, 레기나 켄 그림, 조경수 옮김|9791130649375|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130649375.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791130649375&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|미오, 우리 미오|아스트리드 린드그렌 지음, 요한 에예르크란스 그림, 김경희 옮김|9788936443245|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788936443245.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788936443245&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|달려!|다비드 칼리 지음, 마우리치오 A. C. 콰렐로 그림, 나선희 옮김|9788962195149|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788962195149.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788962195149&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]문학 800|남극의 아이 13호|알바로 야리투 지음, 김정하 옮김|9791189208516|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791189208516.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791189208516&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|멈출 수 없는 우리 1 : 인간은 어떻게 지구를 지배했을까|유발 하라리 지음, 리카르드 사플라나 루이스 그림, 김명주 옮김|9788934958987|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788934958987.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788934958987&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|멈출 수 없는 우리 2 : 세상은 왜 공평하지 않을까|유발 하라리 지음, 리카르드 사플라나 루이스 그림, 김명주 옮김|9788934945864|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788934945864.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788934945864&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|멈출 수 없는 우리 3 : 멈출 수 없는 우리|유발 하라리 지음, 리카르드 사플라나 루이스 그림, 김명주 옮김|9791194330875|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194330875.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194330875&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|한눈에 펼쳐보는 세계 전쟁 그림책|홍건국 지음, 김재일 그림, 홍성지 옮김, 임승휘 감수|9791193003886|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791193003886.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791193003886&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|개념연결 문화유산 사전 : 130개 질문과 개념으로 문화유산 완전 정복!|배성호 외 지음|9791194348467|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791194348467.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791194348467&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|그림으로 보는 우리 문화유산|오홍선이 지음, 오성봉 그림|9788953335820|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788953335820.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788953335820&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|역사를 지키고 내일을 여는 곳, 국립중앙박물관 : 박물관이 들려주는 유물 이야기|한소곤 지음, 정인성, 천복주 그림|9788968308963|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788968308963.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788968308963&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|왕이 들려주는 조선왕조실록|조아라 지음, 수아 그림|9791192813165|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791192813165.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791192813165&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|우리에게도 예쁜 것들이 있다 : 볼수록 매혹적인 우리 유물|이소영|9791155251560|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791155251560.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791155251560&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|의병장 윤희순|정종숙 글, 김소희 그림|9791170284628|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791170284628.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791170284628&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|그래서 이런 지명이 생겼대요|우리누리 지음, 이경석 그림|9791174670403|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791174670403.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9791174670403&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|니 꿈은 뭐이가? : 비행사 권기옥 이야기|박은정 글, 김진화 그림|9788901105918|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788901105918.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788901105918&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|주시경|이은정 지음, 김혜리 그림|9788949129310|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949129310.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949129310&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[일반책]역사 900|쉽게 읽는 백범일지|김구 지음, 도진순 엮음|9788971992296|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788971992296.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788971992296&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+[참고도서]자연과학 400|DK 우주 대백과사전!|DK 『우주 대백과사전!』 편집위원회 지음, 이강환 옮김|9788949153742|https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9788949153742.jpg|https://read365.edunet.net/PureScreen/SchoolSearchResult?searchKeyword=9788949153742&searchType=&provCode=B10&neisCode=B100002311&schoolName=서울숭인초등학교
+`;
+// =========================================================
+
+const KDC_NAMES = {
+  '000': '총류',
+  '100': '철학',
+  '200': '종교',
+  '300': '사회과학',
+  '400': '자연과학',
+  '500': '기술과학',
+  '600': '예술',
+  '700': '언어',
+  '800': '문학',
+  '900': '역사'
+};
+
+function parseRawData(raw) {
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  const books = [];
+
+  for (const line of lines) {
+    const parts = line.split(/\t|\|/).map(p => p.trim());
+    if (parts.length < 4) continue;
+
+    const left   = parts[0]; 
+    const title  = parts[1];
+    const author = parts[2];
+    const isbn   = parts[3];
+    const image  = parts[4] || "";
+    const link   = parts[5] || `https://search.reading.go.kr/search?isbn=${isbn}`;
+
+    let shelf = "기타";
+    if (left.trim().startsWith("[")) {
+      const endBracket = left.indexOf("]");
+      if (endBracket !== -1) {
+        shelf = left.slice(left.indexOf("[") + 1, endBracket).trim(); 
+      }
+    }
+
+    const afterBracket = left.includes("]") ? left.split("]")[1].trim() : left;
+
+    let kdcCode = "000";
+    const codeMatch = afterBracket.match(/(\d{3})/);
+    if (codeMatch) {
+      kdcCode = codeMatch[1];  
+    }
+
+    let kdcName = "";
+    if (KDC_NAMES[kdcCode]) {
+      kdcName = KDC_NAMES[kdcCode];  
+    }
+
+    books.push({
+      shelf: shelf,      
+      kdc: kdcCode,   
+      kdcName: kdcName,    
+      title: title,
+      author: author,
+      isbn: isbn,
+      image: image,
+      link: link
+    });
+  }
+
+  return books;
+}
+
+function getShelves(data) {
+  const map = new Map();
+  data.forEach(book => {
+    const key = book.shelf || "기타";
+    if (!map.has(key)) map.set(key, 0);
+    map.set(key, map.get(key) + 1);
+  });
+  
+  let shelfArray = Array.from(map.entries()).map(([name, count]) => ({ name, count }));
+  
+  const order = ["일반책", "그림책", "참고도서", "교사용"];
+  
+  shelfArray.sort((a, b) => {
+    let indexA = order.indexOf(a.name);
+    let indexB = order.indexOf(b.name);
+    if (indexA === -1) indexA = 999;
+    if (indexB === -1) indexB = 999;
+    return indexA - indexB;
+  });
+
+  return shelfArray;
+}
+
+const allBooks = parseRawData(rawData);
+
+if (allBooks.length === 0) {
+  document.getElementById("kdcContainer").innerHTML = '<p style="text-align:center; padding:100px; color:#8D7B68; font-size:1.1rem;">입력된 도서 데이터가 없습니다.<br>코드 양식을 다시 확인해주세요.</p>';
+} else {
+  const shelves = getShelves(allBooks);
+  let currentShelf = shelves.length > 0 ? shelves[0].name : "기타";
+
+  function renderShelfTabs() {
+    const container = document.getElementById("shelfTabs");
+    container.innerHTML = "";
+    shelves.forEach((shelf) => {
+      const btn = document.createElement("button");
+      btn.className = "shelf-tab" + (shelf.name === currentShelf ? " active" : "");
+      btn.innerHTML = `<span>${shelf.name}</span><span class="count">${shelf.count}권</span>`;
+      
+      btn.addEventListener("click", () => {
+        currentShelf = shelf.name;
+        renderShelfTabs();
+        renderKdcSections();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function renderKdcSections() {
+    const container = document.getElementById("kdcContainer");
+    container.innerHTML = '';
+    
+    const filteredBooks = allBooks.filter(b => b.shelf === currentShelf);
+    if (filteredBooks.length === 0) return;
+
+    const group = {};
+    filteredBooks.forEach(book => {
+      const mainKdc = book.kdc.charAt(0) + "00"; 
+      if (!group[mainKdc]) group[mainKdc] = [];
+      group[mainKdc].push(book);
+    });
+
+    Object.keys(group).sort().forEach(code => {
+      const booksInKdc = group[code];
+      const section = document.createElement('div');
+      section.className = 'kdc-section';
+      
+      const displayName = KDC_NAMES[code] || "분류";
+
+      const header = document.createElement('div');
+      header.className = 'kdc-header';
+      header.innerHTML = `
+        <div class="kdc-header-left">
+          <span class="kdc-toggle">▼</span>
+          <span>${code} ${displayName}</span>
+        </div>
+        <div class="kdc-count">${booksInKdc.length}권</div>
+      `;
+
+      const grid = document.createElement('div');
+      grid.className = 'book-grid';
+      
+      booksInKdc.forEach(book => {
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        
+        card.innerHTML = `
+          <a href="${book.link}" target="_blank" class="book-cover-wrapper" title="${book.title} (클릭 시 이동)">
+            <img src="${book.image}" alt="${book.title}" onerror="this.src='https://via.placeholder.com/300x450/F1F8E9/66BB6A?text=No+Cover'">
+          </a>
+          <div class="book-info">
+            <div class="book-title">${book.title}</div>
+            <div class="book-author">${book.author}</div>
+            <div class="book-kdc">${book.kdc} ${book.kdcName}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      header.addEventListener('click', () => {
+        const isHidden = grid.style.display === "none";
+        grid.style.display = isHidden ? "grid" : "none";
+        header.querySelector('.kdc-toggle').textContent = isHidden ? "▼" : "▶";
+        header.style.borderBottom = isHidden ? "1px solid var(--border)" : "none";
+      });
+
+      section.appendChild(header);
+      section.appendChild(grid);
+      container.appendChild(section);
+    });
+  }
+
+  renderShelfTabs();
+  renderKdcSections();
+}
+</script>
+
+</body>
+</html>
